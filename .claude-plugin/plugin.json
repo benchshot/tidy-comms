@@ -1,7 +1,7 @@
 {
   "name": "tidy-comms",
   "description": "Keeps code comments to a minimum, adding them only where a method is genuinely complex and needs explaining.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": {
     "name": "benchshot"
   },

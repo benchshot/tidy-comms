@@ -38,10 +38,21 @@ If a comment feels needed because a name is unclear, rename the thing instead.
 - `TODO`/`FIXME` notes that carry real, actionable information.
 - Doc comments on public APIs in a library or SDK, where callers rely on generated docs.
 
+## Remove, don't shorten
+
+When cleaning up existing comments, removal is the default. Decide in this order:
+
+1. **Is it protected** (see "Always keep")? Keep it as is.
+2. **Is it necessary**, by the test above? If not, **remove it entirely**. Do not shorten it, reword it, or condense several unnecessary comments into one. An unnecessary comment cut down to fewer words is still unnecessary.
+3. **Only if it is necessary** but bloated, or explains *how* instead of *why*, rewrite it down to the essential *why*.
+4. Otherwise keep it.
+
+A rewrite is never a compromise for a comment you're unsure about. If you can't say what a reader would lose without it, remove it.
+
 ## When asked to tidy existing comments in a file
 
-1. Read the file and classify each comment as keep, rewrite (too long or explains *how* instead of *why*), or remove.
-2. Remove redundant comments; tighten the ones worth keeping.
+1. Read the file and classify each comment using "Remove, don't shorten".
+2. Remove the unnecessary comments; rewrite only the necessary ones that are bloated.
 3. Do not change any code behavior while tidying.
 4. Briefly report what was removed, rewritten, and kept, and point out any spot where a rename would have removed the need for a comment.
 
@@ -69,7 +80,7 @@ If `python3` is unavailable, fall back to reading files directly and counting by
 
 ### 2. Classify
 
-Apply the rules above to every block that isn't protected: **remove**, **rewrite** (and note the shorter line count), or **keep**. Read surrounding code when a comment's value depends on context. For a large project, work through it a directory at a time; if subagents are available, split directories across them. Keep the full classification so that applying matches the report exactly.
+Classify every block that isn't protected using "Remove, don't shorten": **remove**, **rewrite** (only necessary comments; note the shorter line count), or **keep**. Expect most rewrites to be rare; if a large share of blocks lands in rewrite, re-check them, since most should be removals. Read surrounding code when a comment's value depends on context. For a large project, work through it a directory at a time; if subagents are available, split directories across them. Keep the full classification so that applying matches the report exactly.
 
 ### 3. Report
 
@@ -100,7 +111,7 @@ Examples of what would be removed
 ```
 
 - "Now" and "Code lines" come straight from the scanner. "After" is "Now" minus removed lines minus lines saved by rewrites; trailing comments are stripped from their line without removing it.
-- Show around ten varied examples of removals and a few rewrites (before → after) so the user can judge the call.
+- Show around ten varied examples of removals and a few rewrites (before → after, with what makes the comment necessary) so the user can judge the call.
 - List anything uncertain separately rather than guessing.
 - Note where a rename would make a kept comment unnecessary.
 
