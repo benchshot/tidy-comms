@@ -245,25 +245,53 @@ def scan_file(path, spec):
     return counts, blocks
 
 
-def list_files(root):
+def all_paths(root):
     try:
         out = subprocess.run(
             ["git", "-C", root, "ls-files", "-co", "--exclude-standard"],
             capture_output=True, text=True, check=True,
         ).stdout
-        candidates = [os.path.join(root, p) for p in out.splitlines()]
+        candidates = out.splitlines()
     except (subprocess.CalledProcessError, FileNotFoundError):
         candidates = []
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
-            candidates.extend(os.path.join(dirpath, f) for f in filenames)
-    for path in sorted(candidates):
-        rel = os.path.relpath(path, root)
-        if set(rel.split(os.sep)[:-1]) & EXCLUDED_DIRS or ".min." in rel:
+            candidates.extend(os.path.relpath(os.path.join(dirpath, f), root) for f in filenames)
+    return [p for p in sorted(candidates) if not set(p.split(os.sep)[:-1]) & EXCLUDED_DIRS]
+
+
+def list_files(paths, root):
+    for rel in paths:
+        if ".min." in rel:
             continue
+        path = os.path.join(root, rel)
         ext = rel.rsplit(".", 1)[-1].lower() if "." in os.path.basename(rel) else ""
         if ext in LANGUAGES and os.path.isfile(path) and os.path.getsize(path) <= MAX_FILE_BYTES:
             yield rel, ext
+
+
+DOCS_BUILD = re.compile(r"swift-docc-plugin|docbuild|generate-documentation|dokka|\bjazzy\b|dartdoc|typedoc|\bjsdoc\b")
+BUILD_FILES = re.compile(
+    r"(^|/)(Package\.swift|[^/]+\.gradle(\.kts)?|Makefile|Fastfile|pubspec\.yaml|package\.json|"
+    r"\.github/workflows/[^/]+\.ya?ml|\.gitlab-ci\.yml|bitrise\.yml|[^/]+\.sh)$"
+)
+
+
+def docs_evidence(paths, root):
+    """Signs that generated API docs are actually built, not just written in doc-comment style."""
+    found = sorted({p.split(".docc/")[0] + ".docc" for p in paths if ".docc/" in p})
+    found = [f"{d}: DocC catalog" for d in found]
+    for rel in paths:
+        if not BUILD_FILES.search(rel):
+            continue
+        try:
+            with open(os.path.join(root, rel), encoding="utf-8", errors="replace") as f:
+                match = DOCS_BUILD.search(f.read(MAX_FILE_BYTES))
+        except OSError:
+            continue
+        if match:
+            found.append(f"{rel}: {match.group(0)}")
+    return found
 
 
 def main():
@@ -276,7 +304,8 @@ def main():
     totals = defaultdict(int)
     by_language = defaultdict(lambda: defaultdict(int))
     files, skipped_generated = [], 0
-    for rel, ext in list_files(root):
+    paths = all_paths(root)
+    for rel, ext in list_files(paths, root):
         result = scan_file(os.path.join(root, rel), LANGUAGES[ext])
         if result is None:
             skipped_generated += 1
@@ -299,6 +328,7 @@ def main():
         "trailing_comments": sum(b["kind"] == "trailing" for b in all_blocks),
         "protected_blocks": sum(bool(protected & set(b["tags"])) for b in all_blocks),
         "by_language": by_language,
+        "docs_evidence": docs_evidence(paths, root),
     }
     with open(args.out, "w") as f:
         json.dump({"summary": summary, "files": files}, f, indent=1)
@@ -309,6 +339,12 @@ def main():
           f"comment: {totals['comment']:,}  blank: {totals['blank']:,}")
     print(f"Comment blocks: {summary['comment_blocks']:,}  trailing comments: "
           f"{summary['trailing_comments']:,}  protected: {summary['protected_blocks']:,}")
+    if summary["docs_evidence"]:
+        print("Generated docs are built here:")
+        for item in summary["docs_evidence"]:
+            print(f"  {item}")
+    else:
+        print("No sign that generated API docs are built.")
     print("\nMost commented files:")
     for f in sorted(files, key=lambda f: f["comment"], reverse=True)[:10]:
         if f["comment"]:

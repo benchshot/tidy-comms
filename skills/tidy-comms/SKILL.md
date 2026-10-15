@@ -45,8 +45,20 @@ When writing new code, use the code-level fix and skip the comment. When tidying
 - Tool or compiler directives, such as `// swiftlint:disable`, `//noinspection`, `// ktlint-disable`, `// @formatter:off`, `// ignore:` (Dart), `// eslint-disable`, `#pragma`.
 - Navigation markers: `// MARK:`, `//region` / `//endregion`.
 - `TODO`/`FIXME` notes that carry real, actionable information.
-- Doc comments on public APIs in a library or SDK (Swift packages, Android library modules, published packages), where callers rely on generated docs. App-internal code doesn't get this exemption.
+- Useful doc comments on public APIs in a library or SDK (Swift packages, Android library modules, published packages), and in modules whose docs are actually built. See "Generated documentation".
 - Comments in Android `strings.xml` (and other localization files) that give translators context.
+
+## Generated documentation
+
+Doc-comment *style* (`///`, `/** */`, DocC symbol links like ``View/cardStyle(...)``, `@param`) proves nothing: Xcode's Add Documentation, IDE templates and AI tools produce it everywhere. Decide based on whether docs are actually **built**:
+
+- A `.docc` catalog in the module, `swift-docc-plugin` in `Package.swift`, a `docbuild` / `generate-documentation` step in CI or scripts, Dokka in Gradle, or the equivalent (`dartdoc`, `typedoc`, `jsdoc`, `jazzy`). The project scanner reports these as `docs_evidence`.
+
+**No evidence:** doc comments get no special treatment. Apply the normal rules.
+
+**Evidence, for the module it covers:** readers of the generated docs can't see the code, so a type- or method-level summary and one short usage example may stay when they say something the signature doesn't. Doc comments that restate a name, type, or default are still removed. "The line width of the border stroke" is no more useful on a docs page than in the editor.
+
+**Unclear** (for example a public library with no build step found): ask the user once, per module, before classifying its doc comments. Don't ask per comment.
 
 ## Remove, don't shorten
 
@@ -88,11 +100,11 @@ Run the bundled scanner from this skill's directory, writing the report to a tem
 python3 <skill-dir>/scripts/scan_comments.py <project-root> --out <tmp>/tidycomms-scan.json
 ```
 
-It prints line totals and writes every comment block to the JSON file with its file, line range, `kind` (`full` for comment-only lines, `trailing` for comments after code), text, and hint `tags`. It uses `git ls-files` when available, skips dependency and build folders, minified files, and files marked as generated.
+It prints line totals and writes every comment block to the JSON file with its file, line range, `kind` (`full` for comment-only lines, `trailing` for comments after code), text, and hint `tags`. It uses `git ls-files` when available, skips dependency and build folders, minified files, and files marked as generated. The summary also lists `docs_evidence`: any sign that generated API docs are built, and where.
 
 Tags are hints, not verdicts:
 - `shebang`, `directive`, `license`: protected. Always keep.
-- `doc`: a doc comment. Keep on public library APIs and genuinely complex methods; otherwise judge like any other comment.
+- `doc`: a doc comment. Judge it with "Generated documentation", using the scanner's `docs_evidence`.
 - `todo`: keep only if it carries actionable information.
 - `maybe-code`: possibly commented-out code. Confirm by reading it, then remove.
 - `api`: commented-out code in a protocol, interface, delegate, or public declaration (`context` holds the enclosing declaration). Confirm by reading it, then put it under "Needs your decision"; never remove it without asking. The tag is a hint, so also catch API cases it missed.
