@@ -38,7 +38,15 @@ func fetchUser(id: String) async throws -> User {
 
 ## Install
 
-### As a plugin (recommended)
+### With npx
+
+```bash
+npx skills add benchshot/tidy-comms -g
+```
+
+Drop `-g` to install into the current project instead of globally. Works with Claude Code and other agents supported by the [skills CLI](https://skills.sh).
+
+### As a Claude Code plugin
 
 In Claude Code:
 
