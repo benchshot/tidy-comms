@@ -26,6 +26,13 @@ Never comment:
 
 If a comment feels needed because a name is unclear, rename the thing instead.
 
+If a comment only exists to steer callers, enforce it in code instead:
+- "Use `cardStyle(...)` instead of applying this directly" / "internal use only" → tighten access control (`private`, `fileprivate`, `internal`; Kotlin `private`, `internal`).
+- "Deprecated, use `newFetch()`" → `@available(*, deprecated, renamed: "newFetch()")` or Kotlin/Java `@Deprecated`.
+- "Must be called on the main thread" → `@MainActor` (Swift) or `@MainThread` (Android).
+
+When writing new code, use the code-level fix and skip the comment. When tidying existing code, remove the comment and *suggest* the code change rather than making it: access control and annotations can break callers elsewhere, so they need the user's approval like any other code change.
+
 ## How to write the comments that remain
 
 - Keep it short: one to three lines, focused on *why* or *what to watch out for*, not *how*.
@@ -133,7 +140,7 @@ Needs your decision: commented-out API code (not counted above)
 - "Now" and "Code lines" come straight from the scanner. "After" is "Now" minus removed lines minus lines saved by rewrites; trailing comments are stripped from their line without removing it.
 - Show around ten varied examples of removals and a few rewrites (before → after, with what makes the comment necessary) so the user can judge the call.
 - List anything uncertain separately rather than guessing.
-- Note where a rename would make a kept comment unnecessary.
+- Note where a rename would make a kept comment unnecessary, and list suggested access-control or annotation changes that would replace a removed "use X instead" comment.
 
 End by asking whether to apply all of it, only some files or categories, or nothing, and separately ask keep or delete for each item under "Needs your decision".
 
