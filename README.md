@@ -36,6 +36,19 @@ func fetchUser(id: String) async throws -> User {
 }
 ```
 
+**Across a whole project**, it scans every source file and shows what a cleanup would do before touching anything:
+
+```
+TidyComms scan: MyApp (84 files)
+
+                 Now      After    Change
+Total lines     12,480   11,342   -1,138  (-9.1%)
+Comment lines    1,610      472   -1,138  (-70.7%)
+Code lines       9,870    9,870        0
+```
+
+It follows that with the most affected files and examples of what would go, then asks before applying anything. A bundled script (`scripts/scan_comments.py`, Python 3, no dependencies) handles the counting, so the line numbers are exact; Claude decides which comments are worth keeping.
+
 ## Install
 
 ### With npx
@@ -69,10 +82,12 @@ Or into a project's `.claude/skills/` directory to share it with your team.
 
 ## Usage
 
-The skill triggers automatically whenever Claude writes, edits, or reviews code. To tidy an existing file, ask Claude to "tidy the comments in this file" or invoke it directly:
+The skill triggers automatically whenever Claude writes, edits, or reviews code. You can also ask for it directly:
 
-- `/tidy-comms:tidy-comms` when installed as a plugin
-- `/tidy-comms` when installed manually
+- "Tidy the comments in this file"
+- "Scan this project for comments TidyComms would remove"
+
+Or invoke it by name: `/tidy-comms` (npx or manual install) or `/tidy-comms:tidy-comms` (plugin install).
 
 ## License
 
