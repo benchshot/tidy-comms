@@ -1,0 +1,12 @@
+{
+  "name": "tidy-comms",
+  "description": "Keeps code comments to a minimum, adding them only where a method is genuinely complex and needs explaining.",
+  "version": "1.0.0",
+  "author": {
+    "name": "benchshot"
+  },
+  "homepage": "https://github.com/benchshot/tidy-comms",
+  "repository": "https://github.com/benchshot/tidy-comms",
+  "license": "MIT",
+  "keywords": ["comments", "code-style", "clean-code", "skill"]
+}

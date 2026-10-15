@@ -1,0 +1,15 @@
+{
+  "name": "tidy-comms",
+  "description": "Claude Code skill that keeps code comments to a minimum.",
+  "owner": {
+    "name": "benchshot"
+  },
+  "plugins": [
+    {
+      "name": "tidy-comms",
+      "source": "./",
+      "description": "Keeps code comments to a minimum, adding them only where a method is genuinely complex and needs explaining.",
+      "version": "1.0.0"
+    }
+  ]
+}
