@@ -19,6 +19,7 @@ Comment only:
 Never comment:
 - What the code plainly says (`// increment counter`, `// return the result`, `// init view model`).
 - Restated method or property names (`/// Gets the user` on `getUser()`).
+- Doc tags that repeat the signature: `@param userId the user ID`, `@return the user`, `- Parameter id: The id`, `- Returns: The result`. Keep a tag only when it adds something the name and type don't (units, valid ranges, nullability meaning, thrown errors).
 - Section narration (`// Step 1: ...`, `// Now we loop...`).
 - Change history or notes to the reviewer (`// added this to fix X`, `// updated`). That belongs in the commit message.
 - Commented-out code.
@@ -34,9 +35,11 @@ If a comment feels needed because a name is unclear, rename the thing instead.
 ## Always keep
 
 - License or copyright headers.
-- Tool or compiler directives (`// swiftlint:disable`, `// eslint-disable`, `#pragma`, `// MARK:` and similar navigation markers).
+- Tool or compiler directives, such as `// swiftlint:disable`, `//noinspection`, `// ktlint-disable`, `// @formatter:off`, `// ignore:` (Dart), `// eslint-disable`, `#pragma`.
+- Navigation markers: `// MARK:`, `//region` / `//endregion`.
 - `TODO`/`FIXME` notes that carry real, actionable information.
-- Doc comments on public APIs in a library or SDK, where callers rely on generated docs.
+- Doc comments on public APIs in a library or SDK (Swift packages, Android library modules, published packages), where callers rely on generated docs. App-internal code doesn't get this exemption.
+- Comments in Android `strings.xml` (and other localization files) that give translators context.
 
 ## Remove, don't shorten
 

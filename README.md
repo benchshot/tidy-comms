@@ -49,6 +49,8 @@ Code lines       9,870    9,870        0
 
 It follows that with the most affected files and examples of what would go, then asks before applying anything. A bundled script (`scripts/scan_comments.py`, Python 3, no dependencies) handles the counting, so the line numbers are exact; Claude decides which comments are worth keeping.
 
+**Supported languages:** Swift, Objective-C, Kotlin, Java, Gradle (`.kts`), Dart/Flutter, JavaScript, TypeScript, Python, Ruby, Go, Rust, C, C++, C#, Scala, PHP, SQL, Lua, shell, YAML, TOML, Terraform, CSS/SCSS/Less, and XML/HTML (including Android layouts, manifests and resources). Tool directives such as `swiftlint`, `ktlint`, `//noinspection`, `// MARK:`, `//region` and Dart's `// ignore:` are always kept.
+
 ## Install
 
 ### With npx
