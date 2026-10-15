@@ -22,7 +22,7 @@ Never comment:
 - Doc tags that repeat the signature: `@param userId the user ID`, `@return the user`, `- Parameter id: The id`, `- Returns: The result`. Keep a tag only when it adds something the name and type don't (units, valid ranges, nullability meaning, thrown errors).
 - Section narration (`// Step 1: ...`, `// Now we loop...`).
 - Change history or notes to the reviewer (`// added this to fix X`, `// updated`). That belongs in the commit message.
-- Commented-out code.
+- Commented-out code (but see "Ask before removing commented-out API code").
 
 If a comment feels needed because a name is unclear, rename the thing instead.
 
@@ -52,6 +52,16 @@ When cleaning up existing comments, removal is the default. Decide in this order
 
 A rewrite is never a compromise for a comment you're unsure about. If you can't say what a reader would lose without it, remove it.
 
+## Ask before removing commented-out API code
+
+Commented-out code that belongs to an API surface is the one exception to removing without asking. It may be a requirement someone disabled on purpose, an optional delegate method kept as a reference, or a member other modules or SDK consumers still expect. This covers commented-out code:
+
+- Inside a protocol, interface, trait, or abstract class.
+- Inside a delegate, data source, listener, callback, or observer, whether it declares one (`PlayerDelegate`) or conforms to one (`extension VC: UITableViewDataSource`).
+- That is itself a public or open declaration (`// public func`, `// open var`, `// @objc optional func`).
+
+**Always ask the user** before removing it, in every mode: writing code, tidying a file, or applying a project scan. For each one, show the file and line, the commented-out code, and the protocol or type it sits in, then ask whether to keep or delete it. Never decide on the user's behalf, never count it as a removal until they answer, and don't treat a general "apply everything" as an answer to these.
+
 ## When asked to tidy existing comments in a file
 
 1. Read the file and classify each comment using "Remove, don't shorten".
@@ -78,6 +88,7 @@ Tags are hints, not verdicts:
 - `doc`: a doc comment. Keep on public library APIs and genuinely complex methods; otherwise judge like any other comment.
 - `todo`: keep only if it carries actionable information.
 - `maybe-code`: possibly commented-out code. Confirm by reading it, then remove.
+- `api`: commented-out code in a protocol, interface, delegate, or public declaration (`context` holds the enclosing declaration). Confirm by reading it, then put it under "Needs your decision"; never remove it without asking. The tag is a hint, so also catch API cases it missed.
 
 If `python3` is unavailable, fall back to reading files directly and counting by hand.
 
@@ -111,6 +122,12 @@ Examples of what would be removed
   ProfileView.swift:18    // The user's name             (restates `userName`)
   Cache.swift:88-94       // let old = legacyStore()...  (commented-out code)
   ...
+
+Needs your decision: commented-out API code (not counted above)
+  PlayerDelegate.swift:12   // func playerDidPause(_ player: Player)
+                            in: public protocol PlayerDelegate
+  UserRepository.kt:8       // suspend fun users(): List<User>
+                            in: interface UserRepository
 ```
 
 - "Now" and "Code lines" come straight from the scanner. "After" is "Now" minus removed lines minus lines saved by rewrites; trailing comments are stripped from their line without removing it.
@@ -118,8 +135,8 @@ Examples of what would be removed
 - List anything uncertain separately rather than guessing.
 - Note where a rename would make a kept comment unnecessary.
 
-End by asking whether to apply all of it, only some files or categories, or nothing.
+End by asking whether to apply all of it, only some files or categories, or nothing, and separately ask keep or delete for each item under "Needs your decision".
 
 ### 4. Apply (only after approval)
 
-Make exactly the approved changes, file by file. Delete removed full-line comments together with their lines, strip trailing comments while keeping the code, and avoid leaving doubled blank lines behind. Do not touch code. Then rerun the scanner and report the actual before and after totals. If the project has a build or test command, offer to run it.
+Make exactly the approved changes, file by file. Leave every "Needs your decision" item untouched unless the user explicitly chose delete for it. Delete removed full-line comments together with their lines, strip trailing comments while keeping the code, and avoid leaving doubled blank lines behind. Do not touch code. Then rerun the scanner and report the actual before and after totals. If the project has a build or test command, offer to run it.
