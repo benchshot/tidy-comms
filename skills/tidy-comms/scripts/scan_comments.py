@@ -6,6 +6,7 @@ for review. Read-only: never modifies the scanned files.
 """
 
 import argparse
+import fnmatch
 import json
 import os
 import re
@@ -294,54 +295,127 @@ def docs_evidence(paths, root):
     return found
 
 
+CONFIG_NAME = ".tidycomms.json"
+PROTECTED_TAGS = {"shebang", "directive", "license", "kept"}
+
+
+def git(root, *args):
+    return subprocess.run(["git", "-C", root, *args], capture_output=True, text=True, check=True).stdout
+
+
+def load_config(path):
+    if not os.path.isfile(path):
+        return {}
+    with open(path) as f:
+        return json.load(f)
+
+
+def normalize(text):
+    return "\n".join(line.strip() for line in text.strip().splitlines())
+
+
+def changed_scope(root, since):
+    """Files and line numbers changed since `since` (a git ref), or since HEAD for uncommitted work."""
+    base = git(root, "merge-base", since, "HEAD").strip() if since else "HEAD"
+    files = set(git(root, "diff", "--name-only", "--relative", base).splitlines())
+    untracked = set(git(root, "ls-files", "-o", "--exclude-standard").splitlines())
+    lines = defaultdict(set)
+    current = None
+    for row in git(root, "diff", "-U0", "--relative", base).splitlines():
+        if row.startswith("+++ "):
+            current = row[6:] if row.startswith("+++ b/") else None
+        elif row.startswith("@@") and current:
+            added = row.split("+", 1)[1].split(" ", 1)[0]
+            start, _, count = added.partition(",")
+            count = int(count) if count else 1
+            lines[current].update(range(int(start), int(start) + count))
+    return files | untracked, untracked, lines
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", nargs="?", default=".")
     parser.add_argument("--out", required=True, help="where to write the JSON report")
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument("--changed", action="store_true", help="only files with uncommitted changes")
+    scope.add_argument("--since", metavar="REF", help="only files changed since REF (e.g. main), plus uncommitted work")
+    parser.add_argument("--changed-lines", action="store_true",
+                        help="with --changed/--since, only report comments on changed lines")
+    parser.add_argument("--config", help=f"config file (default: <root>/{CONFIG_NAME})")
     args = parser.parse_args()
     root = os.path.abspath(args.root)
+    if args.changed_lines and not (args.changed or args.since):
+        parser.error("--changed-lines needs --changed or --since")
+
+    config = load_config(args.config or os.path.join(root, CONFIG_NAME))
+    skip = config.get("skip", [])
+    keep = [(k.get("file"), normalize(k["text"])) for k in config.get("keep", [])]
+
+    paths = all_paths(root)
+    scoped = untracked = changed_lines = None
+    if args.changed or args.since:
+        scoped, untracked, changed_lines = changed_scope(root, args.since)
 
     totals = defaultdict(int)
     by_language = defaultdict(lambda: defaultdict(int))
-    files, skipped_generated = [], 0
-    paths = all_paths(root)
+    files, skipped_generated, skipped_config = [], 0, 0
     for rel, ext in list_files(paths, root):
+        if scoped is not None and rel not in scoped:
+            continue
+        if any(fnmatch.fnmatch(rel, pattern) for pattern in skip):
+            skipped_config += 1
+            continue
         result = scan_file(os.path.join(root, rel), LANGUAGES[ext])
         if result is None:
             skipped_generated += 1
             continue
         counts, blocks = result
+        for block in blocks:
+            text = normalize(block["text"])
+            if any(text == k_text and file in (None, rel) for file, k_text in keep):
+                block["tags"].append("kept")
+        if args.changed_lines and rel not in untracked:
+            in_scope = changed_lines.get(rel, set())
+            blocks = [b for b in blocks if any(n in in_scope for n in range(b["start"], b["end"] + 1))]
         for key, value in counts.items():
             totals[key] += value
             by_language[ext][key] += value
         by_language[ext]["files"] += 1
         files.append({"path": rel, "language": ext, **counts, "blocks": blocks})
 
+    evidence = docs_evidence(paths, root)
+    evidence += [f"{m}: listed in {CONFIG_NAME}" for m in config.get("docs_modules", [])]
     all_blocks = [b for f in files for b in f["blocks"]]
-    protected = {"shebang", "directive", "license"}
     summary = {
         "root": root,
+        "scope": f"since {args.since}" if args.since else "uncommitted changes" if args.changed else "all files",
+        "changed_lines_only": args.changed_lines,
         "files": len(files),
         "skipped_generated": skipped_generated,
+        "skipped_by_config": skipped_config,
         **totals,
         "comment_blocks": sum(b["kind"] == "full" for b in all_blocks),
         "trailing_comments": sum(b["kind"] == "trailing" for b in all_blocks),
-        "protected_blocks": sum(bool(protected & set(b["tags"])) for b in all_blocks),
+        "protected_blocks": sum(bool(PROTECTED_TAGS & set(b["tags"])) for b in all_blocks),
+        "kept_by_config": sum("kept" in b["tags"] for b in all_blocks),
         "by_language": by_language,
-        "docs_evidence": docs_evidence(paths, root),
+        "docs_evidence": evidence,
     }
     with open(args.out, "w") as f:
         json.dump({"summary": summary, "files": files}, f, indent=1)
 
-    print(f"Scanned {len(files)} files in {root}"
-          + (f" (skipped {skipped_generated} generated)" if skipped_generated else ""))
+    skipped = [f"{n} {why}" for n, why in ((skipped_generated, "generated"), (skipped_config, "by config")) if n]
+    print(f"Scanned {len(files)} files in {root} ({summary['scope']}"
+          + (", changed lines only" if args.changed_lines else "") + ")"
+          + (f", skipped {', '.join(skipped)}" if skipped else ""))
     print(f"Lines: {totals['lines']:,}  code: {totals['code']:,}  "
           f"comment: {totals['comment']:,}  blank: {totals['blank']:,}")
     print(f"Comment blocks: {summary['comment_blocks']:,}  trailing comments: "
-          f"{summary['trailing_comments']:,}  protected: {summary['protected_blocks']:,}")
-    if summary["docs_evidence"]:
+          f"{summary['trailing_comments']:,}  protected: {summary['protected_blocks']:,}"
+          + (f"  kept by config: {summary['kept_by_config']:,}" if summary["kept_by_config"] else ""))
+    if evidence:
         print("Generated docs are built here:")
-        for item in summary["docs_evidence"]:
+        for item in evidence:
             print(f"  {item}")
     else:
         print("No sign that generated API docs are built.")
