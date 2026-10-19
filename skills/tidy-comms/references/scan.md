@@ -46,6 +46,9 @@ Numbers first, then detail:
 ```
 TidyComms scan: <project> (<n> files, <scope>)
 
+Stale comments (contradict the code; correctness issue)
+  SessionStore.kt:57      says "clears the token on logout", but the code keeps it
+
                  Now      After    Change
 Total lines     12,480   11,342   -1,138  (-9.1%)
 Comment lines    1,610      472   -1,138  (-70.7%)
@@ -76,6 +79,7 @@ Suggested code changes (not applied)
 
 - "Now" and "Code lines" come from the scanner. "After" is "Now" minus removed lines minus lines saved by rewrites. Trailing comments are stripped from their line without removing it.
 - Show around ten varied removal examples and a few rewrites (before → after, with what makes the comment necessary).
+- Omit the stale-comments block when there are none.
 - List anything uncertain separately rather than guessing.
 - Note renames that would make a kept comment unnecessary.
 

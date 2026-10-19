@@ -7,6 +7,8 @@ description: Keeps code comments to a minimum, adding them only where a method o
 
 Code should explain itself through clear names and structure. Comments are the exception, not the default.
 
+**Project rules first.** Before tidying, look for a project comment-style file (such as `docs/core/COMMENT-STYLE.md`) or comment rules in `CLAUDE.md` / `AGENTS.md`. Where they conflict with this skill, the project's rules win.
+
 ## When writing or editing code
 
 Do not add a comment unless it passes this test: **would a competent developer reading this for the first time misunderstand it, or have to stop and work it out?**
@@ -22,6 +24,7 @@ Never comment:
 - Doc tags that repeat the signature: `@param userId the user ID`, `@return the user`, `- Parameter id: The id`. Keep a tag only when it adds something the name and type don't (units, valid ranges, what nil means, thrown errors).
 - Section narration (`// Step 1: ...`, `// Now we loop...`).
 - Change history or notes to the reviewer (`// added this to fix X`). That belongs in the commit message.
+- Design justification (`the SDK does not second-guess the host`, `we deliberately avoid X`). That belongs in the PR description. Keep only facts a reader would get wrong without the comment.
 - Commented-out code (but see "Ask before removing commented-out API code").
 
 If a comment feels needed because a name is unclear, rename the thing instead.
@@ -67,6 +70,27 @@ When cleaning up existing comments, removal is the default. Decide in this order
 
 A rewrite is never a compromise for a comment you're unsure about. If you can't say what a reader would lose without it, remove it.
 
+**Duplicates:** when the same *why* appears in a doc comment and an inline comment, or in two methods' doc comments, keep one copy, preferably inline at the line where the tricky behavior happens, and remove the rest.
+
+**Stale comments:** a comment that contradicts the code (says it clears when the code keeps, wrong limits, wrong order) is a correctness issue, not a style one. Remove or correct it, and report it at the top of the summary.
+
+## Long doc comments that describe rules
+
+When a doc comment spells out rules, cases, or a contract (lists of cases, "state A vs state B", priority orders), grep the project's docs (`docs/`, `README`, `*.md`) for its key terms before judging it.
+
+- **A doc covers it:** shrink the comment to a 1–2 line contract (what it returns, its side effects, what the caller must do) plus a pointer to the doc section.
+- **No doc covers it, and the logic is genuinely complex:** keep a trimmed version in the code and suggest moving the full explanation into docs.
+
+Example: a 35-line KDoc on `resolveExpiry()` lists each expiry case (trial, grace period, revoked, renewed-while-offline...), and `docs/billing/EXPIRY.md` already has an "Expiry cases" section covering the same ones. It becomes:
+
+```kotlin
+/**
+ * Returns the effective expiry for [subscription] and clears cached entitlements when it has passed.
+ * Cases and their priority: docs/billing/EXPIRY.md#expiry-cases
+ */
+fun resolveExpiry(subscription: Subscription): Instant
+```
+
 ## Ask before removing commented-out API code
 
 Commented-out code that belongs to an API surface is the one exception to removing without asking. It may be a requirement disabled on purpose, an optional delegate method kept as a reference, or a member other modules still expect. This covers commented-out code:
@@ -79,10 +103,10 @@ Commented-out code that belongs to an API surface is the one exception to removi
 
 ## Tidying a file
 
-1. Read the file and classify each comment using "Remove, don't shorten".
-2. Remove the unnecessary comments; rewrite only the necessary ones that are bloated. Ask about commented-out API code.
+1. Check for project comment rules, then read the file and classify each comment using "Remove, don't shorten". Check every kept comment against the code it describes.
+2. Remove the unnecessary comments and duplicates; rewrite only the necessary ones that are bloated; correct or remove stale ones. Ask about commented-out API code.
 3. Do not change any code behavior while tidying.
-4. Briefly report what was removed, rewritten, and kept, plus any rename or access-control change that would remove the need for a kept comment.
+4. Briefly report, stale comments first, what was removed, rewritten, and kept, plus any rename or access-control change that would remove the need for a kept comment.
 
 ## Scanning a project, branch, or changes
 
