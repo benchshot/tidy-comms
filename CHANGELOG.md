@@ -2,6 +2,18 @@
 
 All notable changes to TidyComms. Versions match `version` in `.claude-plugin/plugin.json`.
 
+## [Unreleased]
+
+### Fixed
+- Doc comments that state a contract (edge cases, what `null` means, where a value comes from, why a private overload exists) are trimmed, not deleted.
+- Kept doc comments stay doc comments; they are no longer converted to `//`.
+- Cutting design justification no longer takes the facts next to it.
+- A doc comment that contradicts the code or comments in its body is reported as stale.
+- SDKs with no docs build count as unclear for generated docs, so the skill asks.
+
+### Added
+- `kdoc-contracts` eval.
+
 ## [1.5.0] - 2026-10-16
 
 ### Added

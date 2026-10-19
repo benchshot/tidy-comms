@@ -24,7 +24,7 @@ Never comment:
 - Doc tags that repeat the signature: `@param userId the user ID`, `@return the user`, `- Parameter id: The id`. Keep a tag only when it adds something the name and type don't (units, valid ranges, what nil means, thrown errors).
 - Section narration (`// Step 1: ...`, `// Now we loop...`).
 - Change history or notes to the reviewer (`// added this to fix X`). That belongs in the commit message.
-- Design justification (`the SDK does not second-guess the host`, `we deliberately avoid X`). That belongs in the PR description. Keep only facts a reader would get wrong without the comment.
+- Design justification (`the SDK does not second-guess the host`, `we deliberately avoid X`). That belongs in the PR description. Cut the justification sentence, not the facts around it: what a term in the name refers to or where a value comes from stays.
 - Commented-out code (but see "Ask before removing commented-out API code").
 
 If a comment feels needed because a name is unclear, rename the thing instead.
@@ -57,7 +57,7 @@ Doc-comment *style* (`///`, `/** */`, DocC links, `@param`) proves nothing: Xcod
 
 - **No evidence:** doc comments get no special treatment.
 - **Evidence, in the module it covers:** a type- or method-level summary and one short usage example may stay when they say something the signature doesn't. Doc comments that restate a name, type, or default are still removed.
-- **Unclear** (such as a public library with no build step found): ask once per module, not per comment.
+- **Unclear** (such as a public library or SDK with no build step found): ask once per module, not per comment.
 
 ## Remove, don't shorten
 
@@ -70,9 +70,13 @@ When cleaning up existing comments, removal is the default. Decide in this order
 
 A rewrite is never a compromise for a comment you're unsure about. If you can't say what a reader would lose without it, remove it.
 
+**Doc comments that state a contract are necessary.** If a doc comment says something the signature can't (no-op or edge cases, what is preserved, what `null` means, where a value comes from, why a private variant exists), it passes the test. Trim the narration around it; don't delete it. "Evicts least-recently-used entries first; pinned entries are never evicted" on `trim(toBytes:)` stays: the signature says neither.
+
+**Keep the form.** A kept or rewritten doc comment stays a doc comment (`/** */`, `///`). IDE hover and quick-doc read those, not `//`. Never convert one into a line comment.
+
 **Duplicates:** when the same *why* appears in a doc comment and an inline comment, or in two methods' doc comments, keep one copy, preferably inline at the line where the tricky behavior happens, and remove the rest.
 
-**Stale comments:** a comment that contradicts the code (says it clears when the code keeps, wrong limits, wrong order) is a correctness issue, not a style one. Remove or correct it, and report it at the top of the summary.
+**Stale comments:** a comment that contradicts the code (says it clears when the code keeps, wrong limits, wrong order) is a correctness issue, not a style one. Remove or correct it, and report it at the top of the summary. Check a doc comment against the code and comments in its body too: a doc comment that says "retries 3 times" above `maxRetries = 5` is stale, even when you were going to remove it anyway.
 
 ## Long doc comments that describe rules
 
