@@ -10,6 +10,7 @@ All notable changes to TidyComms. Versions match `version` in `.claude-plugin/pl
 - Cutting design justification no longer takes the facts next to it.
 - A doc comment that contradicts the code or comments in its body is reported as stale.
 - SDKs with no docs build count as unclear for generated docs, so the skill asks.
+- A long doc comment is shrunk to a doc pointer only after the linked section is confirmed to exist and cover every rule in it. Notes about the code's own timing stay at the line they describe, and pointer replacements are listed in the report.
 
 ### Added
 - `kdoc-contracts` eval.

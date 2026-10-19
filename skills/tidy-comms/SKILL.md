@@ -82,8 +82,10 @@ A rewrite is never a compromise for a comment you're unsure about. If you can't 
 
 When a doc comment spells out rules, cases, or a contract (lists of cases, "state A vs state B", priority orders), grep the project's docs (`docs/`, `README`, `*.md`) for its key terms before judging it.
 
-- **A doc covers it:** shrink the comment to a 1–2 line contract (what it returns, its side effects, what the caller must do) plus a pointer to the doc section.
+- **A doc covers it:** open the section and confirm the anchor exists and every case or rule in the comment is there. Matching key terms is not enough. Only then shrink the comment to a 1–2 line contract (what it returns, its side effects, what the caller must do) plus a pointer to the doc section. Anything the doc doesn't cover stays in the code, trimmed.
 - **No doc covers it, and the logic is genuinely complex:** keep a trimmed version in the code and suggest moving the full explanation into docs.
+- **Either way**, notes about how this code works (it waits for X to load, it must run before Y, a workaround for a race) stay as a short comment at the line they describe. Docs hold the rules; the code explains its own timing.
+- **In the report**, list each comment replaced by a pointer and the section it points to, so the user can check it.
 
 Example: a 35-line KDoc on `resolveExpiry()` lists each expiry case (trial, grace period, revoked, renewed-while-offline...), and `docs/billing/EXPIRY.md` already has an "Expiry cases" section covering the same ones. It becomes:
 
