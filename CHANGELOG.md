@@ -14,6 +14,7 @@ All notable changes to TidyComms. Versions match `version` in `.claude-plugin/pl
 
 ### Added
 - `kdoc-contracts` eval.
+- File header comments are always kept. The scanner tags every comment block above a file's first line of code as `header` and treats it as protected, not just headers that mention a license.
 
 ## [1.5.0] - 2026-10-16
 

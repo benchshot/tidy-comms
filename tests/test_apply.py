@@ -2,7 +2,7 @@ import unittest
 
 from helpers import TempProject, apply, by_path, scan
 
-PROTECTED = {"license", "directive", "shebang", "doc"}
+PROTECTED = {"license", "directive", "shebang", "header", "doc"}
 
 SAMPLE_AFTER = '''//
 //  Sample.swift
@@ -87,10 +87,10 @@ class Apply(TempProject):
                               "func f() {\n    // Opening\n\n    let b = 2\n\n    // Closing\n}\n")
         apply(self.plan_for("b.swift"))
         self.assertEqual(self.read("b.swift"),
-                         "import UIKit\n\nlet a = 1\nfunc f() {\n    let b = 2\n}\n")
+                         "// Header note\n\nimport UIKit\n\nlet a = 1\nfunc f() {\n    let b = 2\n}\n")
 
     def test_preserves_crlf_and_missing_final_newline(self):
-        self.write("c.swift", "// Remove\r\nlet a = 1 // also\r\nlet b = 2")
+        self.write("c.swift", "let a = 1 // also\r\n// Remove\r\nlet b = 2")
         apply(self.plan_for("c.swift"))
         self.assertEqual(self.read("c.swift"), "let a = 1\r\nlet b = 2")
 

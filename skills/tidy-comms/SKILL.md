@@ -44,7 +44,7 @@ When writing new code, use the code-level fix and skip the comment. When tidying
 
 ## Always keep
 
-- License or copyright headers.
+- File header comments: any comment block above the first line of code (file name, author, license, copyright, file overview).
 - Tool or compiler directives: `// swiftlint:disable`, `//noinspection`, `// ktlint-disable`, `// @formatter:off`, `// ignore:` (Dart), `// eslint-disable`, `#pragma`.
 - Navigation markers: `// MARK:`, `//region` / `//endregion`.
 - `TODO`/`FIXME` notes that carry real, actionable information.

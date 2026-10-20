@@ -170,6 +170,8 @@ def tag_block(text, start, seen_code, is_first_line, enclosing=""):
         tags.append("directive")
     if not seen_code and LICENSE.search(text):
         tags.append("license")
+    if not seen_code and "shebang" not in tags:
+        tags.append("header")
     if TODO.search(text):
         tags.append("todo")
     if re.match(r"(///|/\*\*|//!|#')", stripped):
@@ -296,7 +298,7 @@ def docs_evidence(paths, root):
 
 
 CONFIG_NAME = ".tidycomms.json"
-PROTECTED_TAGS = {"shebang", "directive", "license", "kept"}
+PROTECTED_TAGS = {"shebang", "directive", "license", "header", "kept"}
 
 
 def git(root, *args):

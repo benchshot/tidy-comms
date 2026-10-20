@@ -6,7 +6,7 @@ from helpers import FIXTURES, TempProject, by_path, scan
 
 EXPECTED = {
     "ios/Sample.swift": ((22, 9, 10, 3), [
-        (1, 4, "full", ["license"]),
+        (1, 4, "full", ["license", "header"]),
         (8, 8, "full", ["directive"]),
         (10, 10, "full", ["doc"]),
         (12, 12, "full", []),
@@ -42,13 +42,13 @@ EXPECTED = {
         (8, 8, "trailing", []),
     ]),
     "flutter/main.dart": ((3, 1, 2, 0), [
-        (1, 1, "full", ["directive"]),
-        (2, 2, "full", []),
+        (1, 1, "full", ["directive", "header"]),
+        (2, 2, "full", ["header"]),
         (3, 3, "trailing", ["directive"]),
     ]),
     "scripts/tool.py": ((8, 5, 2, 1), [
         (1, 1, "full", ["shebang"]),
-        (2, 2, "full", []),
+        (2, 2, "full", ["header"]),
         (3, 3, "trailing", ["directive"]),
         (7, 7, "trailing", []),
     ]),

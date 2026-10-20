@@ -24,7 +24,7 @@ With `--changed-lines`, line totals still cover whole files, but only comments o
 The scanner uses `git ls-files` when available and skips dependency and build folders, minified files, and generated files. Its JSON lists every comment block with `file`, `start`, `end`, `kind` (`full` for comment-only lines, `trailing` for comments after code), `text`, and hint `tags`. The summary includes `docs_evidence` (see "Generated documentation" in `SKILL.md`).
 
 Tags are hints, not verdicts:
-- `shebang`, `directive`, `license`: protected. Always keep.
+- `shebang`, `directive`, `license`, `header`: protected. Always keep. `header` marks any comment block above the first line of code.
 - `kept`: listed under `keep` in `.tidycomms.json`. The user already decided; keep it and don't ask again.
 - `doc`: judge with "Generated documentation", using `docs_evidence`.
 - `todo`: keep only if it carries actionable information.

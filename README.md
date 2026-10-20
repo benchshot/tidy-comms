@@ -12,7 +12,7 @@ Claude tends to over-comment: narrating steps, restating method names, leaving n
 
 **On request**, it tidies existing comments, sorting each one into keep, rewrite, or remove, then reports what changed. It never changes code behavior while tidying.
 
-It always keeps license headers, tool directives (`// MARK:`, `// swiftlint:disable`, `// eslint-disable`), actionable TODOs, and doc comments in modules where generated docs are actually built.
+It always keeps file header comments (anything above the first line of code, including license headers), tool directives (`// MARK:`, `// swiftlint:disable`, `// eslint-disable`), actionable TODOs, and doc comments in modules where generated docs are actually built.
 
 ### Before
 
